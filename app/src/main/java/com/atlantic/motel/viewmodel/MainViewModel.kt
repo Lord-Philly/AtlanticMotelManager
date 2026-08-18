@@ -36,6 +36,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             while (true) {
                 _tick.value = SystemClock.elapsedRealtime()
+                kotlinx.coroutines.delay(1000L)
+            }
+        }
+        viewModelScope.launch {
+            while (true) {
                 loadDailyTotal()
                 kotlinx.coroutines.delay(30000L)
             }

@@ -94,6 +94,7 @@ fun MainScreen(
                         }
                     }
                 },
+                navigationIcon = {},
                 actions = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
