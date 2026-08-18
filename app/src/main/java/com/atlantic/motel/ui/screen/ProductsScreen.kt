@@ -217,7 +217,18 @@ fun ProductDialog(
         containerColor = ElevatedSurface,
         titleContentColor = TextPrimary,
         textContentColor = TextSecondary,
-        title = { Text(title, fontWeight = FontWeight.SemiBold) },
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Close, "Fechar", modifier = Modifier.size(18.dp), tint = TextSecondary)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(title, fontWeight = FontWeight.SemiBold)
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -271,24 +282,22 @@ fun ProductDialog(
                         )
                     }
                 }
+                Button(
+                    onClick = {
+                        val priceCents = parsePriceToCents(priceText)
+                        if (name.isNotBlank() && priceCents > 0) {
+                            onSave(name, priceCents, category)
+                        }
+                    },
+                    enabled = name.isNotBlank() && priceText.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Salvar") }
             }
         },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val priceCents = parsePriceToCents(priceText)
-                    if (name.isNotBlank() && priceCents > 0) {
-                        onSave(name, priceCents, category)
-                    }
-                },
-                enabled = name.isNotBlank() && priceText.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
-                shape = RoundedCornerShape(10.dp)
-            ) { Text("Salvar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextDisabled) }
-        }
+        confirmButton = {},
+        dismissButton = {}
     )
 }
 

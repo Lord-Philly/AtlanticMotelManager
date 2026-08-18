@@ -317,9 +317,20 @@ fun CheckoutDialog(
         onDismissRequest = onDismiss,
         containerColor = ElevatedSurface,
         titleContentColor = TextPrimary,
-        title = { Text("Finalizar Hospedagem", fontWeight = FontWeight.SemiBold) },
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Close, "Fechar", modifier = Modifier.size(18.dp), tint = TextSecondary)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Finalizar Hospedagem", fontWeight = FontWeight.SemiBold)
+            }
+        },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Total: ${BillingEngine.formatCurrency(total)}",
                     fontWeight = FontWeight.Bold,
@@ -327,13 +338,9 @@ fun CheckoutDialog(
                     fontFamily = JetBrainsMonoFamily,
                     color = DeepCrimson
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Forma de pagamento:", fontWeight = FontWeight.Medium, color = TextSecondary)
                 Spacer(modifier = Modifier.height(8.dp))
-            }
-        },
-        confirmButton = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Forma de pagamento:", fontWeight = FontWeight.Medium, color = TextSecondary)
+                Spacer(modifier = Modifier.height(4.dp))
                 Button(
                     onClick = { onCheckout(PaymentMethod.DINHEIRO) },
                     modifier = Modifier.fillMaxWidth(),
@@ -366,9 +373,8 @@ fun CheckoutDialog(
                 }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextDisabled) }
-        }
+        confirmButton = {},
+        dismissButton = {}
     )
 }
 
@@ -386,7 +392,18 @@ fun AddConsumptionDialog(
         containerColor = ElevatedSurface,
         titleContentColor = TextPrimary,
         textContentColor = TextSecondary,
-        title = { Text("Adicionar Consumo", fontWeight = FontWeight.SemiBold) },
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Close, "Fechar", modifier = Modifier.size(18.dp), tint = TextSecondary)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Adicionar Consumo", fontWeight = FontWeight.SemiBold)
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (products.isEmpty()) {
@@ -433,23 +450,21 @@ fun AddConsumptionDialog(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                    Button(
+                        onClick = {
+                            selectedProduct?.let { product ->
+                                onAdd(product, quantity.toIntOrNull() ?: 1)
+                            }
+                        },
+                        enabled = selectedProduct != null && (quantity.toIntOrNull() ?: 0) > 0,
+                        colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Adicionar") }
                 }
             }
         },
-        confirmButton = {
-            Button(
-                onClick = {
-                    selectedProduct?.let { product ->
-                        onAdd(product, quantity.toIntOrNull() ?: 1)
-                    }
-                },
-                enabled = selectedProduct != null && (quantity.toIntOrNull() ?: 0) > 0,
-                colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
-                shape = RoundedCornerShape(10.dp)
-            ) { Text("Adicionar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextDisabled) }
-        }
+        confirmButton = {},
+        dismissButton = {}
     )
 }

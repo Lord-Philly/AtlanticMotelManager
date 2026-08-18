@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.atlantic.motel.AtlanticMotelApp
 import com.atlantic.motel.data.model.User
 import com.atlantic.motel.data.model.UserRole
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -32,12 +33,24 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _state.value = LoginState(isLoading = true)
-            val user = userDao.authenticate(username.trim(), password)
+
+            var user = userDao.authenticate(username.trim(), password)
+
+            if (user == null) {
+                delay(200)
+                user = userDao.authenticate(username.trim(), password)
+            }
+
+            if (user == null) {
+                delay(400)
+                user = userDao.authenticate(username.trim(), password)
+            }
+
             if (user != null) {
                 (getApplication<AtlanticMotelApp>()).setCurrentUser(user)
                 _state.value = LoginState(success = true)
             } else {
-                _state.value = LoginState(error = "Usuario ou senha invalidos")
+                _state.value = LoginState(error = "Usuário ou senha inválidos")
             }
         }
     }

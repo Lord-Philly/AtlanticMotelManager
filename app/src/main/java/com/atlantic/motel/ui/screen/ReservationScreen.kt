@@ -211,7 +211,18 @@ fun AddReservationDialog(
         containerColor = ElevatedSurface,
         titleContentColor = TextPrimary,
         textContentColor = TextSecondary,
-        title = { Text("Nova Reserva", fontWeight = FontWeight.SemiBold) },
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Close, "Fechar", modifier = Modifier.size(18.dp), tint = TextSecondary)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Nova Reserva", fontWeight = FontWeight.SemiBold)
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Apartamento:", fontWeight = FontWeight.Medium, fontSize = 13.sp, color = TextSecondary)
@@ -337,26 +348,24 @@ fun AddReservationDialog(
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
+                Button(
+                    onClick = {
+                        val apt = selectedApartment
+                        val d = day.padStart(2, '0')
+                        val m = month.padStart(2, '0')
+                        val fullDate = if (year.isNotBlank()) "$d/$m/$year" else "$d/$m"
+                        if (apt != null && guestName.isNotBlank() && day.isNotBlank() && month.isNotBlank() && time.isNotBlank()) {
+                            onAdd(apt.id, apt.number, guestName, fullDate, time, notes)
+                        }
+                    },
+                    enabled = selectedApartment != null && guestName.isNotBlank() && day.isNotBlank() && month.isNotBlank() && time.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Salvar") }
             }
         },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val apt = selectedApartment
-                    val d = day.padStart(2, '0')
-                    val m = month.padStart(2, '0')
-                    val fullDate = if (year.isNotBlank()) "$d/$m/$year" else "$d/$m"
-                    if (apt != null && guestName.isNotBlank() && day.isNotBlank() && month.isNotBlank() && time.isNotBlank()) {
-                        onAdd(apt.id, apt.number, guestName, fullDate, time, notes)
-                    }
-                },
-                enabled = selectedApartment != null && guestName.isNotBlank() && day.isNotBlank() && month.isNotBlank() && time.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
-                shape = RoundedCornerShape(10.dp)
-            ) { Text("Salvar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextDisabled) }
-        }
+        confirmButton = {},
+        dismissButton = {}
     )
 }

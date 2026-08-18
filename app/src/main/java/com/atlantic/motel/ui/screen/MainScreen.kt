@@ -50,6 +50,8 @@ fun MainScreen(
     var showAddApartmentDialog by remember { mutableStateOf(false) }
     var showApartmentActions by remember { mutableStateOf<Apartment?>(null) }
 
+    val user = AtlanticMotelApp.instance.getCurrentUser()
+
     val bottomItems = listOf(
         BottomNavItem.Apartamentos,
         BottomNavItem.Produtos,
@@ -63,65 +65,55 @@ fun MainScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Motel Manager",
-                                fontFamily = CormorantGaramondFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = TextPrimary
-                            )
-                            val user = AtlanticMotelApp.instance.getCurrentUser()
-                            if (user != null) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = when (user.gender) {
-                                            UserGender.FEMININO -> Icons.Default.Female
-                                            UserGender.MASCULINO -> Icons.Default.Male
-                                        },
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = TextSecondary
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        user.displayName,
-                                        fontSize = 11.sp,
-                                        color = TextSecondary
-                                    )
-                                }
+                    Column {
+                        Text(
+                            "Motel Manager",
+                            fontFamily = CormorantGaramondFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = TextPrimary
+                        )
+                        if (user != null) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = when (user.gender) {
+                                        UserGender.FEMININO -> Icons.Default.Female
+                                        UserGender.MASCULINO -> Icons.Default.Male
+                                    },
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = TextSecondary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    user.displayName,
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
                             }
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.AccountBalanceWallet,
-                                contentDescription = "Total do dia",
-                                modifier = Modifier.size(18.dp),
-                                tint = Champagne
-                            )
-                            Text(
-                                BillingEngine.formatCurrency(dailyTotal),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = JetBrainsMonoFamily,
-                                color = Champagne
-                            )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceBlack,
-                    titleContentColor = TextPrimary
-                ),
                 actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.AccountBalanceWallet,
+                            contentDescription = "Total do dia",
+                            modifier = Modifier.size(18.dp),
+                            tint = Champagne
+                        )
+                        Text(
+                            BillingEngine.formatCurrency(dailyTotal),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = JetBrainsMonoFamily,
+                            color = Champagne
+                        )
+                    }
                     IconButton(onClick = { showAddApartmentDialog = true }) {
                         Icon(Icons.Default.Add, "Adicionar Apt", tint = TextSecondary)
                     }
@@ -131,7 +123,11 @@ fun MainScreen(
                     }) {
                         Icon(Icons.Default.Logout, "Sair", tint = TextSecondary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = SurfaceBlack,
+                    titleContentColor = TextPrimary
+                )
             )
         },
         bottomBar = {
@@ -213,7 +209,7 @@ fun MainScreen(
     }
 
     showStartStayDialog?.let { apartment ->
-        DarkDialog(
+        CloseableDialog(
             title = "Check-in — Apt ${apartment.number}",
             onDismiss = { showStartStayDialog = null }
         ) {
@@ -236,7 +232,7 @@ fun MainScreen(
     }
 
     showApartmentActions?.let { apartment ->
-        DarkDialog(
+        CloseableDialog(
             title = "Apt ${apartment.number}",
             onDismiss = { showApartmentActions = null }
         ) {
@@ -272,7 +268,7 @@ fun MainScreen(
     }
 
     if (showAddApartmentDialog) {
-        DarkDialog(
+        CloseableDialog(
             title = "Novo Apartamento",
             onDismiss = { showAddApartmentDialog = false }
         ) {
@@ -299,7 +295,7 @@ fun MainScreen(
 }
 
 @Composable
-fun DarkDialog(
+fun CloseableDialog(
     title: String,
     onDismiss: () -> Unit,
     content: @Composable () -> Unit
@@ -310,16 +306,30 @@ fun DarkDialog(
         titleContentColor = TextPrimary,
         textContentColor = TextSecondary,
         title = {
-            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = TextPrimary)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Close, "Fechar", modifier = Modifier.size(18.dp), tint = TextSecondary)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = TextPrimary)
+            }
         },
         text = { content() },
         confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Fechar", color = TextSecondary)
-            }
-        }
+        dismissButton = {}
     )
+}
+
+@Composable
+fun DarkDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    CloseableDialog(title = title, onDismiss = onDismiss, content = content)
 }
 
 @Composable
