@@ -1,81 +1,192 @@
 package com.atlantic.motel.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.atlantic.motel.AtlanticMotelApp
+import com.atlantic.motel.billing.BillingEngine
 import com.atlantic.motel.data.model.Apartment
 import com.atlantic.motel.data.model.ApartmentState
+import com.atlantic.motel.data.model.UserGender
 import com.atlantic.motel.ui.components.ApartmentCard
+import com.atlantic.motel.ui.theme.*
 import com.atlantic.motel.viewmodel.MainViewModel
+
+sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
+    data object Apartamentos : BottomNavItem("apartamentos", Icons.Default.Villa, "Apts")
+    data object Produtos : BottomNavItem("products", Icons.Default.Inventory, "Produtos")
+    data object Lavanderia : BottomNavItem("laundry", Icons.Default.LocalLaundryService, "Lavanderia")
+    data object Reservas : BottomNavItem("reservations", Icons.Default.Event, "Reservas")
+    data object Relatorios : BottomNavItem("reports", Icons.Default.Receipt, "Relatórios")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onStayClick: (Long) -> Unit,
     onReservationClick: () -> Unit,
-    onHistoryClick: () -> Unit,
     onProductsClick: () -> Unit,
+    onLaundryClick: () -> Unit = {},
+    onReportsClick: () -> Unit = {},
+    onLogout: () -> Unit = {},
     viewModel: MainViewModel = viewModel()
 ) {
     val apartments by viewModel.apartments.collectAsState()
+    val dailyTotal by viewModel.dailyTotal.collectAsState()
     var showStartStayDialog by remember { mutableStateOf<Apartment?>(null) }
-    var showMaintenanceDialog by remember { mutableStateOf<Apartment?>(null) }
     var showAddApartmentDialog by remember { mutableStateOf(false) }
     var showApartmentActions by remember { mutableStateOf<Apartment?>(null) }
 
+    val bottomItems = listOf(
+        BottomNavItem.Apartamentos,
+        BottomNavItem.Produtos,
+        BottomNavItem.Lavanderia,
+        BottomNavItem.Reservas,
+        BottomNavItem.Relatorios
+    )
+
     Scaffold(
+        containerColor = DeepBlack,
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text("Atlantic Motel", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text("Colorado do Oeste - RO", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Motel Manager",
+                                fontFamily = CormorantGaramondFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = TextPrimary
+                            )
+                            val user = AtlanticMotelApp.instance.getCurrentUser()
+                            if (user != null) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = when (user.gender) {
+                                            UserGender.FEMININO -> Icons.Default.Female
+                                            UserGender.MASCULINO -> Icons.Default.Male
+                                        },
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = TextSecondary
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        user.displayName,
+                                        fontSize = 11.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.AccountBalanceWallet,
+                                contentDescription = "Total do dia",
+                                modifier = Modifier.size(18.dp),
+                                tint = Champagne
+                            )
+                            Text(
+                                BillingEngine.formatCurrency(dailyTotal),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = JetBrainsMonoFamily,
+                                color = Champagne
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = SurfaceBlack,
+                    titleContentColor = TextPrimary
                 ),
                 actions = {
                     IconButton(onClick = { showAddApartmentDialog = true }) {
-                        Icon(Icons.Default.Add, "Adicionar", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Default.Add, "Adicionar Apt", tint = TextSecondary)
                     }
-                    IconButton(onClick = onProductsClick) {
-                        Icon(Icons.Default.Inventory, "Produtos", tint = MaterialTheme.colorScheme.onPrimary)
-                    }
-                    IconButton(onClick = onReservationClick) {
-                        Icon(Icons.Default.Event, "Reservas", tint = MaterialTheme.colorScheme.onPrimary)
-                    }
-                    IconButton(onClick = onHistoryClick) {
-                        Icon(Icons.Default.History, "Historico", tint = MaterialTheme.colorScheme.onPrimary)
+                    IconButton(onClick = {
+                        AtlanticMotelApp.instance.logout()
+                        onLogout()
+                    }) {
+                        Icon(Icons.Default.Logout, "Sair", tint = TextSecondary)
                     }
                 }
             )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = SurfaceBlack,
+                contentColor = TextSecondary,
+                tonalElevation = 0.dp
+            ) {
+                bottomItems.forEach { item ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(item.icon, contentDescription = item.label, modifier = Modifier.size(20.dp))
+                        },
+                        label = {
+                            Text(item.label, fontSize = 10.sp)
+                        },
+                        selected = false,
+                        onClick = {
+                            when (item) {
+                                BottomNavItem.Apartamentos -> { /* already here */ }
+                                BottomNavItem.Produtos -> onProductsClick()
+                                BottomNavItem.Lavanderia -> onLaundryClick()
+                                BottomNavItem.Reservas -> onReservationClick()
+                                BottomNavItem.Relatorios -> onReportsClick()
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DeepCrimson,
+                            selectedTextColor = DeepCrimson,
+                            unselectedIconColor = TextDisabled,
+                            unselectedTextColor = TextDisabled,
+                            indicatorColor = DeepCrimson.copy(alpha = 0.12f)
+                        )
+                    )
+                }
+            }
         }
     ) { paddingValues ->
         if (apartments.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(DeepBlack),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Carregando...", textAlign = TextAlign.Center)
+                Text("Carregando...", textAlign = TextAlign.Center, color = TextDisabled)
             }
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .background(DeepBlack),
                 contentPadding = PaddingValues(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -84,6 +195,7 @@ fun MainScreen(
                     ApartmentCard(
                         apartment = state.apartment,
                         stayDuration = state.duration,
+                        stayDurationHMS = state.durationHMS,
                         stayAmount = state.amount,
                         guestName = state.guestName,
                         onClick = {
@@ -101,194 +213,158 @@ fun MainScreen(
     }
 
     showStartStayDialog?.let { apartment ->
-        StartStayDialog(
-            apartmentNumber = apartment.number,
-            onStart = { guestName ->
-                viewModel.startStay(apartment.id, guestName)
-                showStartStayDialog = null
-            },
+        DarkDialog(
+            title = "Check-in — Apt ${apartment.number}",
             onDismiss = { showStartStayDialog = null }
-        )
+        ) {
+            var guestName by remember { mutableStateOf("") }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                DarkTextField(
+                    value = guestName,
+                    onValueChange = { guestName = it },
+                    label = "Nome do hóspede (opcional)"
+                )
+                DarkButton(
+                    onClick = {
+                        viewModel.startStay(apartment.id, guestName)
+                        showStartStayDialog = null
+                    },
+                    text = "Iniciar"
+                )
+            }
+        }
     }
 
     showApartmentActions?.let { apartment ->
-        ApartmentActionsDialog(
-            apartment = apartment,
-            onClean = {
-                viewModel.markCleaned(apartment.id)
-                showApartmentActions = null
-            },
-            onMaintenance = { note ->
-                viewModel.setMaintenance(apartment.id, note)
-                showApartmentActions = null
-            },
-            onClearMaintenance = {
-                viewModel.clearMaintenance(apartment.id)
-                showApartmentActions = null
-            },
+        DarkDialog(
+            title = "Apt ${apartment.number}",
             onDismiss = { showApartmentActions = null }
-        )
-    }
-
-    if (showAddApartmentDialog) {
-        AddApartmentDialog(
-            onAdd = { number ->
-                viewModel.addApartment(number)
-                showAddApartmentDialog = false
-            },
-            onDismiss = { showAddApartmentDialog = false }
-        )
-    }
-}
-
-@Composable
-fun StartStayDialog(
-    apartmentNumber: String,
-    onStart: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var guestName by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Check-in - Apt $apartmentNumber") },
-        text = {
-            OutlinedTextField(
-                value = guestName,
-                onValueChange = { guestName = it },
-                label = { Text("Nome do hospede (opcional)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            Button(onClick = { onStart(guestName) }) {
-                Text("Iniciar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
-    )
-}
-
-@Composable
-fun ApartmentActionsDialog(
-    apartment: Apartment,
-    onClean: () -> Unit,
-    onMaintenance: (String) -> Unit,
-    onClearMaintenance: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    var showMaintenanceInput by remember { mutableStateOf(false) }
-    var maintenanceNote by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Apt ${apartment.number}") },
-        text = {
+        ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (apartment.state) {
                     ApartmentState.LIMPEZA -> {
-                        Text("Este apartamento precisa de limpeza.")
-                        Button(
-                            onClick = onClean,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Icon(Icons.Default.CleaningServices, null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Limpeza Concluida")
-                        }
+                        Text("Precisa de limpeza.", color = TextSecondary, fontSize = 13.sp)
+                        DarkButton(
+                            onClick = {
+                                viewModel.markCleaned(apartment.id)
+                                showApartmentActions = null
+                            },
+                            text = "Limpeza Concluída"
+                        )
                     }
                     ApartmentState.MANUTENCAO -> {
-                        Text("Em manutencao.")
+                        Text("Em manutenção.", color = TextSecondary, fontSize = 13.sp)
                         if (apartment.maintenanceNote.isNotBlank()) {
-                            Text("Motivo: ${apartment.maintenanceNote}", fontSize = 13.sp)
+                            Text("Motivo: ${apartment.maintenanceNote}", fontSize = 12.sp, color = TextDisabled)
                         }
-                        if (!showMaintenanceInput) {
-                            Button(
-                                onClick = onClearMaintenance,
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                Text("Manutencao Concluida")
-                            }
-                        }
+                        DarkButton(
+                            onClick = {
+                                viewModel.clearMaintenance(apartment.id)
+                                showApartmentActions = null
+                            },
+                            text = "Manutenção Concluída"
+                        )
                     }
                     else -> {}
                 }
-
-                if (apartment.state == ApartmentState.LIVRE || apartment.state == ApartmentState.MANUTENCAO) {
-                    HorizontalDivider()
-                    if (showMaintenanceInput) {
-                        OutlinedTextField(
-                            value = maintenanceNote,
-                            onValueChange = { maintenanceNote = it },
-                            label = { Text("Motivo da manutencao") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Button(
-                            onClick = { onMaintenance(maintenanceNote) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text("Enviar para Manutencao")
-                        }
-                    } else {
-                        OutlinedButton(
-                            onClick = { showMaintenanceInput = true },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Build, null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Colocar em Manutencao")
-                        }
-                    }
-                }
             }
+        }
+    }
+
+    if (showAddApartmentDialog) {
+        DarkDialog(
+            title = "Novo Apartamento",
+            onDismiss = { showAddApartmentDialog = false }
+        ) {
+            var number by remember { mutableStateOf("") }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                DarkTextField(
+                    value = number,
+                    onValueChange = { number = it },
+                    label = "Número do apartamento"
+                )
+                DarkButton(
+                    onClick = {
+                        if (number.isNotBlank()) {
+                            viewModel.addApartment(number)
+                            showAddApartmentDialog = false
+                        }
+                    },
+                    text = "Adicionar",
+                    enabled = number.isNotBlank()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DarkDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = ElevatedSurface,
+        titleContentColor = TextPrimary,
+        textContentColor = TextSecondary,
+        title = {
+            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = TextPrimary)
         },
+        text = { content() },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Fechar") }
+            TextButton(onClick = onDismiss) {
+                Text("Fechar", color = TextSecondary)
+            }
         }
     )
 }
 
 @Composable
-fun AddApartmentDialog(
-    onAdd: (String) -> Unit,
-    onDismiss: () -> Unit
+fun DarkTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String
 ) {
-    var number by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Novo Apartamento") },
-        text = {
-            OutlinedTextField(
-                value = number,
-                onValueChange = { number = it },
-                label = { Text("Numero do apartamento") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = { if (number.isNotBlank()) onAdd(number) },
-                enabled = number.isNotBlank()
-            ) { Text("Adicionar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, color = TextSecondary) },
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            focusedBorderColor = DeepCrimson,
+            unfocusedBorderColor = BorderDark,
+            focusedContainerColor = SurfaceBlack,
+            unfocusedContainerColor = SurfaceBlack,
+            cursorColor = DeepCrimson
+        ),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth()
     )
+}
+
+@Composable
+fun DarkButton(
+    onClick: () -> Unit,
+    text: String,
+    enabled: Boolean = true
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = DeepCrimson,
+            contentColor = androidx.compose.ui.graphics.Color.White,
+            disabledContainerColor = DeepBurgundy.copy(alpha = 0.5f),
+            disabledContentColor = TextDisabled
+        ),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+    }
 }

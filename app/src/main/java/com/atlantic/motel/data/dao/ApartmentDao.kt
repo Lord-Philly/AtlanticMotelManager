@@ -10,6 +10,9 @@ interface ApartmentDao {
     @Query("SELECT * FROM apartments ORDER BY number ASC")
     fun getAll(): Flow<List<Apartment>>
 
+    @Query("SELECT * FROM apartments ORDER BY number ASC")
+    suspend fun getAllSync(): List<Apartment>
+
     @Query("SELECT * FROM apartments WHERE id = :id")
     suspend fun getById(id: Long): Apartment?
 

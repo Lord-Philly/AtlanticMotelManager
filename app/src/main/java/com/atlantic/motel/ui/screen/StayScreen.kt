@@ -1,14 +1,18 @@
 package com.atlantic.motel.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -17,6 +21,7 @@ import com.atlantic.motel.billing.BillingEngine
 import com.atlantic.motel.data.model.Consumption
 import com.atlantic.motel.data.model.PaymentMethod
 import com.atlantic.motel.data.model.Product
+import com.atlantic.motel.ui.theme.*
 import com.atlantic.motel.viewmodel.ConsumptionViewModel
 import com.atlantic.motel.viewmodel.StayViewModel
 
@@ -44,25 +49,33 @@ fun StayScreen(
     var showAddConsumptionDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = DeepBlack,
         topBar = {
             TopAppBar(
-                title = { Text("Apt ${stayDetail.apartment?.number ?: "..."}") },
+                title = {
+                        Text(
+                            "Apt ${stayDetail.apartment?.number ?: "..."}",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = CormorantGaramondFamily
+                        )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Voltar")
+                        Icon(Icons.Default.ArrowBack, "Voltar", tint = TextSecondary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = SurfaceBlack,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextSecondary
                 ),
                 actions = {
                     IconButton(onClick = { showAddConsumptionDialog = true }) {
-                        Icon(Icons.Default.AddShoppingCart, "Consumo", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Default.AddShoppingCart, "Consumo", tint = TextSecondary)
                     }
                     IconButton(onClick = { showCheckoutDialog = true }) {
-                        Icon(Icons.Default.CheckCircle, "Checkout", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Default.CheckCircle, "Finalizar", tint = DeepCrimson)
                     }
                 }
             )
@@ -78,29 +91,68 @@ fun StayScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = SurfaceBlack),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             "Hospedagem",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = TextSecondary,
+                            letterSpacing = 0.5.sp
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         if (stayDetail.stay?.guestName?.isNotBlank() == true) {
-                            InfoRow("Hospede", stayDetail.stay!!.guestName)
+                            InfoRow("Hóspede", stayDetail.stay!!.guestName)
                         }
-                        InfoRow("Tempo", stayDetail.duration)
-                        InfoRow("Valor hospedagem", BillingEngine.formatCurrency(stayDetail.stayAmount))
+                        if (stayDetail.durationHMS.isNotBlank()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Tempo", fontSize = 14.sp, color = TextDisabled)
+                                Text(
+                                    stayDetail.durationHMS,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = JetBrainsMonoFamily,
+                                    color = DeepCrimson,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                        }
+                        if (stayDetail.duration.isNotBlank()) {
+                            InfoRow("Duração", stayDetail.duration)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        HorizontalDivider(color = BorderDark)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Hospedagem", fontSize = 14.sp, color = TextSecondary)
+                            Text(
+                                BillingEngine.formatCurrency(stayDetail.stayAmount),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = JetBrainsMonoFamily,
+                                color = Champagne
+                            )
+                        }
                     }
                 }
             }
 
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceBlack),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -109,14 +161,17 @@ fun StayScreen(
                         ) {
                             Text(
                                 "Consumo",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = TextSecondary,
+                                letterSpacing = 0.5.sp
                             )
                             Text(
                                 BillingEngine.formatCurrency(stayDetail.consumptionTotal),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.primary
+                                fontSize = 15.sp,
+                                fontFamily = JetBrainsMonoFamily,
+                                color = Champagne
                             )
                         }
                     }
@@ -134,28 +189,30 @@ fun StayScreen(
             }
 
             item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                HorizontalDivider(color = BorderDark, modifier = Modifier.padding(vertical = 4.dp))
             }
 
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = DeepBurgundy.copy(alpha = 0.3f)),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             "TOTAL",
+                            fontFamily = CormorantGaramondFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            fontSize = 16.sp,
+                            color = TextSecondary,
+                            letterSpacing = 2.sp
                         )
                         Text(
                             BillingEngine.formatCurrency(stayDetail.total),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            fontSize = 30.sp,
+                            fontFamily = JetBrainsMonoFamily,
+                            color = DeepCrimson
                         )
                     }
                 }
@@ -190,11 +247,11 @@ fun StayScreen(
 @Composable
 fun InfoRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
-        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        Text(label, fontSize = 14.sp, color = TextDisabled)
+        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
     }
 }
 
@@ -204,35 +261,46 @@ fun ConsumptionItem(
     onRemove: () -> Unit,
     onUpdateQty: (Int) -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SurfaceBlack),
+        shape = RoundedCornerShape(10.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(consumption.productName, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Text(consumption.productName, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = TextPrimary)
                 Text(
                     "${consumption.quantity}x ${BillingEngine.formatCurrency(consumption.unitPriceInCents)}",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = TextDisabled
                 )
             }
             Text(
                 BillingEngine.formatCurrency(consumption.quantity * consumption.unitPriceInCents),
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                fontFamily = JetBrainsMonoFamily,
+                color = Champagne
             )
             Row {
                 IconButton(onClick = { onUpdateQty(consumption.quantity - 1) }, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Remove, "Menos", modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Remove, "Menos", modifier = Modifier.size(16.dp), tint = TextSecondary)
                 }
-                Text("${consumption.quantity}", modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.CenterVertically))
+                Text(
+                    "${consumption.quantity}",
+                    modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.CenterVertically),
+                    color = TextPrimary,
+                    fontFamily = JetBrainsMonoFamily
+                )
                 IconButton(onClick = { onUpdateQty(consumption.quantity + 1) }, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Add, "Mais", modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Add, "Mais", modifier = Modifier.size(16.dp), tint = DeepCrimson)
                 }
                 IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Delete, "Remover", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, "Remover", modifier = Modifier.size(16.dp), tint = MetallicRed)
                 }
             }
         }
@@ -247,39 +315,59 @@ fun CheckoutDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Finalizar Hospedagem") },
+        containerColor = ElevatedSurface,
+        titleContentColor = TextPrimary,
+        title = { Text("Finalizar Hospedagem", fontWeight = FontWeight.SemiBold) },
         text = {
             Column {
                 Text(
                     "Total: ${BillingEngine.formatCurrency(total)}",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontSize = 22.sp,
+                    fontFamily = JetBrainsMonoFamily,
+                    color = DeepCrimson
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Forma de pagamento:", fontWeight = FontWeight.Medium)
+                Text("Forma de pagamento:", fontWeight = FontWeight.Medium, color = TextSecondary)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         },
         confirmButton = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Button(
                     onClick = { onCheckout(PaymentMethod.DINHEIRO) },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("DINHEIRO") }
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Payments, null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("DINHEIRO", fontWeight = FontWeight.Medium)
+                }
                 Button(
                     onClick = { onCheckout(PaymentMethod.PIX) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                ) { Text("PIX") }
+                    colors = ButtonDefaults.buttonColors(containerColor = Burgundy, contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.QrCode, null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("PIX", fontWeight = FontWeight.Medium)
+                }
                 Button(
                     onClick = { onCheckout(PaymentMethod.CARTAO) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                ) { Text("CARTAO") }
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson.copy(alpha = 0.7f), contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.CreditCard, null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("CARTÃO", fontWeight = FontWeight.Medium)
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextDisabled) }
         }
     )
 }
@@ -295,11 +383,14 @@ fun AddConsumptionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Adicionar Consumo") },
+        containerColor = ElevatedSurface,
+        titleContentColor = TextPrimary,
+        textContentColor = TextSecondary,
+        title = { Text("Adicionar Consumo", fontWeight = FontWeight.SemiBold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (products.isEmpty()) {
-                    Text("Nenhum produto cadastrado.\nCadastre em Produtos.")
+                    Text("Nenhum produto cadastrado.\nCadastre em Produtos.", color = TextDisabled)
                 } else {
                     products.forEach { product ->
                         Row(
@@ -310,16 +401,35 @@ fun AddConsumptionDialog(
                         ) {
                             RadioButton(
                                 selected = selectedProduct?.id == product.id,
-                                onClick = { selectedProduct = product }
+                                onClick = { selectedProduct = product },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = DeepCrimson,
+                                    unselectedColor = TextDisabled
+                                )
                             )
-                            Text(product.name, modifier = Modifier.weight(1f))
-                            Text(BillingEngine.formatCurrency(product.priceInCents), fontSize = 13.sp)
+                            Text(product.name, modifier = Modifier.weight(1f), color = TextPrimary)
+                            Text(
+                                BillingEngine.formatCurrency(product.priceInCents),
+                                fontSize = 13.sp,
+                                fontFamily = JetBrainsMonoFamily,
+                                color = Champagne
+                            )
                         }
                     }
                     OutlinedTextField(
                         value = quantity,
                         onValueChange = { quantity = it.filter { c -> c.isDigit() } },
-                        label = { Text("Quantidade") },
+                        label = { Text("Quantidade", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = DeepCrimson,
+                            unfocusedBorderColor = BorderDark,
+                            focusedContainerColor = SurfaceBlack,
+                            unfocusedContainerColor = SurfaceBlack,
+                            cursorColor = DeepCrimson
+                        ),
+                        shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -333,11 +443,13 @@ fun AddConsumptionDialog(
                         onAdd(product, quantity.toIntOrNull() ?: 1)
                     }
                 },
-                enabled = selectedProduct != null && (quantity.toIntOrNull() ?: 0) > 0
+                enabled = selectedProduct != null && (quantity.toIntOrNull() ?: 0) > 0,
+                colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
+                shape = RoundedCornerShape(10.dp)
             ) { Text("Adicionar") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextDisabled) }
         }
     )
 }

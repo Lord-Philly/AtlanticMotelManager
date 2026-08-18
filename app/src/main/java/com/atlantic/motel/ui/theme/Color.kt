@@ -2,19 +2,28 @@ package com.atlantic.motel.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Primary = Color(0xFF1565C0)
-val PrimaryDark = Color(0xFF0D47A1)
-val Secondary = Color(0xFF00897B)
-val Background = Color(0xFFF5F5F5)
-val Surface = Color(0xFFFFFFFF)
-val Error = Color(0xFFD32F2F)
+val DeepBlack = Color(0xFF050505)
+val SurfaceBlack = Color(0xFF0A0A0A)
+val ElevatedSurface = Color(0xFF111111)
+val BorderDark = Color(0xFF2A171B)
 
-val LivreColor = Color(0xFF4CAF50)
-val OcupadoColor = Color(0xFFE53935)
-val LimpezaColor = Color(0xFFFFA726)
-val ManutencaoColor = Color(0xFF8E24AA)
+val DeepBurgundy = Color(0xFF5A0B16)
+val Burgundy = Color(0xFF760F1D)
+val DeepCrimson = Color(0xFF941426)
+val CrimsonRed = Color(0xFFB51D32)
 
-val CardLivre = Color(0xFFE8F5E9)
-val CardOcupado = Color(0xFFFFEBEE)
-val CardLimpeza = Color(0xFFFFF3E0)
-val CardManutencao = Color(0xFFF3E5F5)
+val MetallicRed = Color(0xFFC52A3D)
+val MetallicRedLight = Color(0xFFD63A4C)
+
+val Champagne = Color(0xFFC9A36A)
+val ChampagneLight = Color(0xFFD8B982)
+val ChampagneSubtle = Color(0xFFE0C89A)
+
+val TextPrimary = Color(0xFFF2EEEE)
+val TextSecondary = Color(0xFFB9AEB1)
+val TextDisabled = Color(0xFF6F6568)
+
+val LivreColor = Color(0xFF2D5A3D)
+val OcupadoColor = DeepCrimson
+val LimpezaColor = Color(0xFF8B7355)
+val ManutencaoColor = MetallicRed

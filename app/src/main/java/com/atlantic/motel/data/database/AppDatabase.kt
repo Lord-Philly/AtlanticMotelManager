@@ -18,9 +18,11 @@ import kotlinx.coroutines.launch
         Product::class,
         Consumption::class,
         Payment::class,
-        Reservation::class
+        Reservation::class,
+        User::class,
+        Laundry::class
     ],
-    version = 1,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,6 +32,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun consumptionDao(): ConsumptionDao
     abstract fun paymentDao(): PaymentDao
     abstract fun reservationDao(): ReservationDao
+    abstract fun userDao(): UserDao
+    abstract fun laundryDao(): LaundryDao
 
     companion object {
         @Volatile
@@ -42,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "atlantic_motel_db"
                 )
+                    .fallbackToDestructiveMigration()
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
@@ -63,6 +68,37 @@ abstract class AppDatabase : RoomDatabase() {
             val numbers = listOf("21", "22", "23", "24")
             numbers.forEach { number ->
                 apartmentDao.insert(Apartment(number = number))
+            }
+
+            val userDao = db.userDao()
+            if (userDao.count() == 0) {
+                userDao.insert(
+                    User(
+                        username = "admin",
+                        password = "admin",
+                        displayName = "Administrador",
+                        role = UserRole.ADMIN,
+                        gender = UserGender.MASCULINO
+                    )
+                )
+                userDao.insert(
+                    User(
+                        username = "kesia",
+                        password = "1234",
+                        displayName = "Kesia",
+                        role = UserRole.FUNCIONARIO,
+                        gender = UserGender.FEMININO
+                    )
+                )
+                userDao.insert(
+                    User(
+                        username = "reginaldo",
+                        password = "1234",
+                        displayName = "Reginaldo",
+                        role = UserRole.FUNCIONARIO,
+                        gender = UserGender.MASCULINO
+                    )
+                )
             }
         }
     }

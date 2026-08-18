@@ -9,65 +9,34 @@ object BillingEngine {
         val description: String
     )
 
-    data class RateEntry(
-        val minutes: Int,
-        val amountInCents: Long,
-        val label: String
-    )
-
-    private val rateTable = listOf(
-        RateEntry(60, 10000, "1h"),
-        RateEntry(90, 15000, "1:30"),
-        RateEntry(120, 20000, "2h"),
-        RateEntry(150, 25000, "2:30"),
-        RateEntry(180, 30000, "3h"),
-        RateEntry(210, 35000, "3:30"),
-        RateEntry(240, 40000, "4h")
-    )
-
-    private const val OVERNIGHT_RATE_CENTS = 40000L
-    private const val OVERNIGHT_MINUTES = 240
+    private const val RATE_PER_HOUR_CENTS = 10000L
+    private const val RATE_PER_30MIN_CENTS = 5000L
+    private const val FIRST_HOUR_TOLERANCE_MINUTES = 10
 
     fun calculateStayAmount(startTimeMillis: Long, endTimeMillis: Long): BillingResult {
         val durationMillis = endTimeMillis - startTimeMillis
-        val durationMinutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis).toInt()
+        val durationSeconds = TimeUnit.MILLISECONDS.toSeconds(durationMillis)
 
-        if (durationMinutes <= 0) {
+        if (durationSeconds <= 0) {
             return BillingResult(0, "Tempo invalido")
         }
 
-        if (durationMinutes <= OVERNIGHT_MINUTES) {
-            val entry = findRateEntry(durationMinutes)
-            return BillingResult(entry.amountInCents, entry.label)
+        val durationMinutes = TimeUnit.MILLISECONDS.toMinutes(durationMillis).toInt()
+
+        if (durationMinutes < 60) {
+            return BillingResult(RATE_PER_HOUR_CENTS, "1h (minimo)")
         }
 
-        val baseStay = (durationMinutes / 1440)
-        val remainderMinutes = durationMinutes % 1440
-        val baseAmount = baseStay * OVERNIGHT_RATE_CENTS
+        val billableMinutes = durationMinutes - FIRST_HOUR_TOLERANCE_MINUTES
+        val extraMinutes = billableMinutes - 60
+        val extraBlocks = (extraMinutes + 29) / 30
+        val totalCents = RATE_PER_HOUR_CENTS + (extraBlocks * RATE_PER_30MIN_CENTS)
 
-        if (remainderMinutes == 0) {
-            val label = if (baseStay == 1) "Pernoite" else "${baseStay}x Pernoite"
-            return BillingResult(baseAmount, label)
-        }
+        val hours = durationMinutes / 60
+        val mins = durationMinutes % 60
+        val desc = if (mins > 0) "${hours}h${mins}min" else "${hours}h"
 
-        val extraEntry = findRateEntry(remainderMinutes)
-        val total = baseAmount + extraEntry.amountInCents
-        val label = if (baseStay > 0) {
-            "${baseStay}x Pernoite + ${extraEntry.label}"
-        } else {
-            extraEntry.label
-        }
-
-        return BillingResult(total, label)
-    }
-
-    private fun findRateEntry(durationMinutes: Int): RateEntry {
-        for (entry in rateTable) {
-            if (durationMinutes <= entry.minutes) {
-                return entry
-            }
-        }
-        return rateTable.last()
+        return BillingResult(totalCents, desc)
     }
 
     fun formatCurrency(amountInCents: Long): String {
@@ -82,5 +51,15 @@ object BillingEngine {
         val hours = totalMinutes / 60
         val minutes = totalMinutes % 60
         return "%dh %02dmin".format(hours, minutes)
+    }
+
+    fun formatDurationHMS(startTimeMillis: Long, endTimeMillis: Long): String {
+        val durationMillis = endTimeMillis - startTimeMillis
+        if (durationMillis < 0) return "00:00:00"
+        val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(durationMillis)
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+        return "%02d:%02d:%02d".format(hours, minutes, seconds)
     }
 }

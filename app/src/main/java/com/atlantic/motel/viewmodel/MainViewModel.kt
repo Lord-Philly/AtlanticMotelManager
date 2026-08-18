@@ -1,6 +1,7 @@
 package com.atlantic.motel.viewmodel
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.atlantic.motel.AtlanticMotelApp
@@ -9,10 +10,12 @@ import com.atlantic.motel.data.model.Apartment
 import com.atlantic.motel.data.model.ApartmentState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 data class ApartmentUiState(
     val apartment: Apartment,
     val duration: String? = null,
+    val durationHMS: String? = null,
     val amount: String? = null,
     val guestName: String? = null
 )
@@ -21,34 +24,53 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val db = (application as AtlanticMotelApp).database
     private val apartmentDao = db.apartmentDao()
     private val stayDao = db.stayDao()
+    private val paymentDao = db.paymentDao()
 
-    private val _currentMillis = MutableStateFlow(System.currentTimeMillis())
-    val currentMillis: StateFlow<Long> = _currentMillis
+    private val _tick = MutableStateFlow(0L)
+    val tick: StateFlow<Long> = _tick
+
+    private val _dailyTotal = MutableStateFlow(0L)
+    val dailyTotal: StateFlow<Long> = _dailyTotal
 
     init {
         viewModelScope.launch {
             while (true) {
-                _currentMillis.value = System.currentTimeMillis()
-                kotlinx.coroutines.delay(1000L)
+                _tick.value = SystemClock.elapsedRealtime()
+                loadDailyTotal()
+                kotlinx.coroutines.delay(30000L)
             }
         }
+    }
+
+    private suspend fun loadDailyTotal() {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val startOfDay = cal.timeInMillis
+        val endOfDay = System.currentTimeMillis()
+        _dailyTotal.value = paymentDao.getTotalBetween(startOfDay, endOfDay)
     }
 
     val apartments: StateFlow<List<ApartmentUiState>> = combine(
         apartmentDao.getAll(),
         stayDao.getActiveStays(),
-        _currentMillis
-    ) { apartments, activeStays, currentMillis ->
+        _tick
+    ) { apartments, activeStays, _ ->
         val staysByApartment = activeStays.associateBy { it.apartmentId }
+        val now = System.currentTimeMillis()
 
         apartments.map { apartment ->
             val stay = staysByApartment[apartment.id]
             if (stay != null && apartment.state == ApartmentState.OCUPADO) {
-                val duration = BillingEngine.formatDuration(stay.startTime, currentMillis)
-                val billing = BillingEngine.calculateStayAmount(stay.startTime, currentMillis)
+                val duration = BillingEngine.formatDuration(stay.startTime, now)
+                val durationHMS = BillingEngine.formatDurationHMS(stay.startTime, now)
+                val billing = BillingEngine.calculateStayAmount(stay.startTime, now)
                 ApartmentUiState(
                     apartment = apartment,
                     duration = duration,
+                    durationHMS = durationHMS,
                     amount = BillingEngine.formatCurrency(billing.amountInCents),
                     guestName = stay.guestName.ifBlank { null }
                 )

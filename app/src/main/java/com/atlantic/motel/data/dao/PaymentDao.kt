@@ -20,4 +20,7 @@ interface PaymentDao {
 
     @Query("SELECT COALESCE(SUM(totalInCents), 0) FROM payments WHERE timestamp BETWEEN :start AND :end")
     suspend fun getTotalBetween(start: Long, end: Long): Long
+
+    @Query("SELECT * FROM payments WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
+    suspend fun getAllBetweenSync(start: Long, end: Long): List<Payment>
 }

@@ -11,7 +11,17 @@ import androidx.navigation.navArgument
 fun MainNavHost() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "main") {
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable("main") {
             MainScreen(
                 onStayClick = { apartmentId ->
@@ -20,11 +30,19 @@ fun MainNavHost() {
                 onReservationClick = {
                     navController.navigate("reservations")
                 },
-                onHistoryClick = {
-                    navController.navigate("history")
-                },
                 onProductsClick = {
                     navController.navigate("products")
+                },
+                onLaundryClick = {
+                    navController.navigate("laundry")
+                },
+                onReportsClick = {
+                    navController.navigate("reports")
+                },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -55,6 +73,19 @@ fun MainNavHost() {
         composable("history") {
             HistoryScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("laundry") {
+            LaundryScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("reports") {
+            ReportsScreen(
+                onBack = { navController.popBackStack() },
+                onHistoryClick = { navController.navigate("history") }
             )
         }
     }

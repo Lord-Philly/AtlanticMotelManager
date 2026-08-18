@@ -66,9 +66,9 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     val products: StateFlow<List<Product>> = productDao.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addProduct(name: String, priceInCents: Long) {
+    fun addProduct(name: String, priceInCents: Long, category: com.atlantic.motel.data.model.ProductCategory = com.atlantic.motel.data.model.ProductCategory.GERAL) {
         viewModelScope.launch {
-            productDao.insert(Product(name = name, priceInCents = priceInCents))
+            productDao.insert(Product(name = name, priceInCents = priceInCents, category = category))
         }
     }
 

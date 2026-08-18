@@ -1,6 +1,7 @@
 package com.atlantic.motel.viewmodel
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.atlantic.motel.AtlanticMotelApp
@@ -15,6 +16,7 @@ data class StayDetailState(
     val consumptions: List<Consumption> = emptyList(),
     val consumptionTotal: Long = 0,
     val duration: String = "",
+    val durationHMS: String = "",
     val stayAmount: Long = 0,
     val total: Long = 0
 )
@@ -26,13 +28,13 @@ class StayViewModel(application: Application) : AndroidViewModel(application) {
     private val consumptionDao = db.consumptionDao()
     private val paymentDao = db.paymentDao()
 
-    private val _currentMillis = MutableStateFlow(System.currentTimeMillis())
-    val currentMillis: StateFlow<Long> = _currentMillis
+    private val _tick = MutableStateFlow(0L)
+    val tick: StateFlow<Long> = _tick
 
     init {
         viewModelScope.launch {
             while (true) {
-                _currentMillis.value = System.currentTimeMillis()
+                _tick.value = SystemClock.elapsedRealtime()
                 kotlinx.coroutines.delay(1000L)
             }
         }
@@ -46,18 +48,21 @@ class StayViewModel(application: Application) : AndroidViewModel(application) {
                 if (stay != null) {
                     combine(
                         consumptionDao.getByStay(stay.id),
-                        _currentMillis
-                    ) { consumptions, millis ->
+                        _tick
+                    ) { consumptions, _ ->
+                        val now = System.currentTimeMillis()
                         val apartment = apartmentDao.getById(stay.apartmentId)
                         val consumptionTotal = consumptions.sumOf { it.quantity * it.unitPriceInCents }
-                        val duration = BillingEngine.formatDuration(stay.startTime, millis)
-                        val stayAmount = BillingEngine.calculateStayAmount(stay.startTime, millis).amountInCents
+                        val duration = BillingEngine.formatDuration(stay.startTime, now)
+                        val durationHMS = BillingEngine.formatDurationHMS(stay.startTime, now)
+                        val stayAmount = BillingEngine.calculateStayAmount(stay.startTime, now).amountInCents
                         StayDetailState(
                             stay = stay,
                             apartment = apartment,
                             consumptions = consumptions,
                             consumptionTotal = consumptionTotal,
                             duration = duration,
+                            durationHMS = durationHMS,
                             stayAmount = stayAmount,
                             total = stayAmount + consumptionTotal
                         )
