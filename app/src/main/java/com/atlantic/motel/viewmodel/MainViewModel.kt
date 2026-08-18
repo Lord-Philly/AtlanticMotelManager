@@ -42,7 +42,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             while (true) {
                 loadDailyTotal()
-                kotlinx.coroutines.delay(30000L)
+                kotlinx.coroutines.delay(10000L)
             }
         }
     }

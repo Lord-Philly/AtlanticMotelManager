@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -102,18 +103,21 @@ fun ReportsScreen(
 
             ReportSection(
                 title = "Diário",
+                icon = Icons.Default.CalendarToday,
                 onTxt = { viewModel.exportReport(ReportPeriod.DIARIO, context) },
                 onPdf = { viewModel.exportReportPdf(ReportPeriod.DIARIO, context) }
             )
             ReportSection(
                 title = "Semanal",
                 subtitle = "Últimos 7 dias",
+                icon = Icons.Default.DateRange,
                 onTxt = { viewModel.exportReport(ReportPeriod.SEMANAL, context) },
                 onPdf = { viewModel.exportReportPdf(ReportPeriod.SEMANAL, context) }
             )
             ReportSection(
                 title = "Mensal",
                 subtitle = "Últimos 30 dias",
+                icon = Icons.Default.CalendarMonth,
                 onTxt = { viewModel.exportReport(ReportPeriod.MENSAL, context) },
                 onPdf = { viewModel.exportReportPdf(ReportPeriod.MENSAL, context) }
             )
@@ -140,6 +144,7 @@ private fun shareFile(context: android.content.Context, path: String, mimeType: 
 @Composable
 fun ReportSection(
     title: String,
+    icon: ImageVector = Icons.Default.ReceiptLong,
     subtitle: String = "",
     onTxt: () -> Unit,
     onPdf: () -> Unit
@@ -156,7 +161,7 @@ fun ReportSection(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.ReceiptLong,
+                        icon,
                         contentDescription = null,
                         tint = DeepCrimson,
                         modifier = Modifier.size(24.dp)

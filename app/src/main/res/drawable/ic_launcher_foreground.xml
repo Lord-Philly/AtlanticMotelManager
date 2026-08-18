@@ -4,22 +4,49 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Dark background circle -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M30,30h48v48h-48z"/>
+        android:fillColor="#0A0A0A"
+        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0"/>
+
+    <!-- Burgundy accent ring -->
     <path
-        android:fillColor="#1565C0"
-        android:pathData="M34,34h40v8h-40z"/>
+        android:fillColor="#941426"
+        android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0"/>
+
+    <!-- Inner dark circle -->
     <path
-        android:fillColor="#1565C0"
-        android:pathData="M34,46h18v8h-18z"/>
+        android:fillColor="#0A0A0A"
+        android:pathData="M54,54m-33,0a33,33 0,1 1,66 0a33,33 0,1 1,-66 0"/>
+
+    <!-- Stylized M letter - left vertical -->
     <path
-        android:fillColor="#1565C0"
-        android:pathData="M56,46h18v8h-18z"/>
+        android:fillColor="#C9A36A"
+        android:pathData="M32,36 L37,36 L37,68 L32,68 Z"/>
+
+    <!-- Stylized M letter - left diagonal -->
     <path
-        android:fillColor="#1565C0"
-        android:pathData="M34,58h18v8h-18z"/>
+        android:fillColor="#C9A36A"
+        android:pathData="M32,36 L37,36 L48,54 L43,54 Z"/>
+
+    <!-- Stylized M letter - right diagonal -->
     <path
-        android:fillColor="#1565C0"
-        android:pathData="M56,58h18v8h-18z"/>
+        android:fillColor="#C9A36A"
+        android:pathData="M60,54 L65,54 L76,36 L71,36 Z"/>
+
+    <!-- Stylized M letter - right vertical -->
+    <path
+        android:fillColor="#C9A36A"
+        android:pathData="M71,36 L76,36 L76,68 L71,68 Z"/>
+
+    <!-- Center M peak -->
+    <path
+        android:fillColor="#D8B982"
+        android:pathData="M43,54 L48,54 L54,44 L60,54 L65,54 L54,38 Z"/>
+
+    <!-- Bottom accent line -->
+    <path
+        android:fillColor="#941426"
+        android:pathData="M34,70 L74,70 L74,72 L34,72 Z"/>
 </vector>

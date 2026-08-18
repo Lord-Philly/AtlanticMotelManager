@@ -1,22 +1,29 @@
 package com.atlantic.motel.ui.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.atlantic.motel.AtlanticMotelApp
 
 @Composable
 fun MainNavHost() {
     val navController = rememberNavController()
+    val hasSession = AtlanticMotelApp.instance.currentUser != null
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(
+        navController = navController,
+        startDestination = if (hasSession) "main" else "login"
+    ) {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -25,23 +32,34 @@ fun MainNavHost() {
         composable("main") {
             MainScreen(
                 onStayClick = { apartmentId ->
-                    navController.navigate("stay/$apartmentId")
+                    navController.navigate("stay/$apartmentId") {
+                        launchSingleTop = true
+                    }
                 },
                 onReservationClick = {
-                    navController.navigate("reservations")
+                    navController.navigate("reservations") {
+                        launchSingleTop = true
+                    }
                 },
                 onProductsClick = {
-                    navController.navigate("products")
+                    navController.navigate("products") {
+                        launchSingleTop = true
+                    }
                 },
                 onLaundryClick = {
-                    navController.navigate("laundry")
+                    navController.navigate("laundry") {
+                        launchSingleTop = true
+                    }
                 },
                 onReportsClick = {
-                    navController.navigate("reports")
+                    navController.navigate("reports") {
+                        launchSingleTop = true
+                    }
                 },
                 onLogout = {
                     navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -54,38 +72,66 @@ fun MainNavHost() {
             val apartmentId = backStackEntry.arguments?.getLong("apartmentId") ?: return@composable
             StayScreen(
                 apartmentId = apartmentId,
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
 
         composable("products") {
             ProductsScreen(
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
 
         composable("reservations") {
             ReservationScreen(
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
 
         composable("history") {
             HistoryScreen(
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
 
         composable("laundry") {
             LaundryScreen(
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
 
         composable("reports") {
             ReportsScreen(
-                onBack = { navController.popBackStack() },
-                onHistoryClick = { navController.navigate("history") }
+                onBack = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                },
+                onHistoryClick = {
+                    navController.navigate("history") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
     }

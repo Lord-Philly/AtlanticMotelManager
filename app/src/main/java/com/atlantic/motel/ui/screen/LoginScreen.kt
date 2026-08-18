@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.atlantic.motel.data.model.UserGender
 import com.atlantic.motel.ui.theme.*
 import com.atlantic.motel.viewmodel.LoginViewModel
 
@@ -35,13 +36,22 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val state by loginViewModel.state.collectAsState()
+    val registerState by loginViewModel.registerState.collectAsState()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showRegisterDialog by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(state.success) {
         if (state.success) {
+            onLoginSuccess()
+        }
+    }
+
+    LaunchedEffect(registerState.success) {
+        if (registerState.success) {
+            loginViewModel.clearRegisterState()
             onLoginSuccess()
         }
     }
@@ -197,7 +207,158 @@ fun LoginScreen(
                 }
             }
 
+            OutlinedButton(
+                onClick = { showRegisterDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Champagne),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(Champagne.copy(alpha = 0.4f))
+                ),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("CADASTRAR", fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
+            }
+
             Spacer(modifier = Modifier.height(40.dp))
+        }
+    }
+
+    if (showRegisterDialog) {
+        RegisterDialog(
+            onDismiss = {
+                showRegisterDialog = false
+                loginViewModel.clearRegisterState()
+            },
+            onRegister = { displayName, username, password, gender ->
+                loginViewModel.register(displayName, username, password, gender)
+            },
+            registerState = registerState
+        )
+    }
+}
+
+@Composable
+fun RegisterDialog(
+    onDismiss: () -> Unit,
+    onRegister: (String, String, String, UserGender) -> Unit,
+    registerState: com.atlantic.motel.viewmodel.RegisterState
+) {
+    var displayName by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var selectedGender by remember { mutableStateOf(UserGender.MASCULINO) }
+
+    CloseableDialog(
+        title = "Novo Usuário",
+        onDismiss = onDismiss
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            DarkTextField(
+                value = displayName,
+                onValueChange = { displayName = it },
+                label = "Nome de exibição"
+            )
+            DarkTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = "Usuário"
+            )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Senha", color = TextSecondary) },
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            if (passwordVisible) Icons.Default.VisibilityOff
+                            else Icons.Default.Visibility,
+                            contentDescription = null,
+                            tint = TextSecondary
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedBorderColor = DeepCrimson,
+                    unfocusedBorderColor = BorderDark,
+                    focusedContainerColor = SurfaceBlack,
+                    unfocusedContainerColor = SurfaceBlack,
+                    cursorColor = DeepCrimson
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = selectedGender == UserGender.MASCULINO,
+                    onClick = { selectedGender = UserGender.MASCULINO },
+                    label = { Text("Masculino", fontSize = 13.sp) },
+                    leadingIcon = if (selectedGender == UserGender.MASCULINO) {
+                        { Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp)) }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = DeepCrimson.copy(alpha = 0.2f),
+                        selectedLabelColor = TextPrimary,
+                        selectedLeadingIconColor = DeepCrimson,
+                        containerColor = SurfaceBlack,
+                        labelColor = TextSecondary
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                )
+                FilterChip(
+                    selected = selectedGender == UserGender.FEMININO,
+                    onClick = { selectedGender = UserGender.FEMININO },
+                    label = { Text("Feminino", fontSize = 13.sp) },
+                    leadingIcon = if (selectedGender == UserGender.FEMININO) {
+                        { Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp)) }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = DeepCrimson.copy(alpha = 0.2f),
+                        selectedLabelColor = TextPrimary,
+                        selectedLeadingIconColor = DeepCrimson,
+                        containerColor = SurfaceBlack,
+                        labelColor = TextSecondary
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (registerState.error != null) {
+                Text(
+                    text = registerState.error!!,
+                    color = MetallicRed,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            DarkButton(
+                onClick = {
+                    onRegister(displayName, username, password, selectedGender)
+                },
+                text = if (registerState.isLoading) "Cadastrando..." else "Cadastrar",
+                enabled = !registerState.isLoading && displayName.isNotBlank() && username.isNotBlank() && password.isNotBlank()
+            )
         }
     }
 }

@@ -50,7 +50,7 @@ fun MainScreen(
     var showAddApartmentDialog by remember { mutableStateOf(false) }
     var showApartmentActions by remember { mutableStateOf<Apartment?>(null) }
 
-    val user = AtlanticMotelApp.instance.getCurrentUser()
+    val user = AtlanticMotelApp.instance.currentUser
 
     val bottomItems = listOf(
         BottomNavItem.Apartamentos,
@@ -175,7 +175,7 @@ fun MainScreen(
                     .background(DeepBlack),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Carregando...", textAlign = TextAlign.Center, color = TextDisabled)
+                Text("Carregando...", textAlign = TextAlign.Center, color = TextSecondary)
             }
         } else {
             LazyVerticalGrid(
