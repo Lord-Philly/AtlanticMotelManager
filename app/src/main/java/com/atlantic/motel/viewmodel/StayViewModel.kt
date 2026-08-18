@@ -31,13 +31,21 @@ class StayViewModel(application: Application) : AndroidViewModel(application) {
     private val _tick = MutableStateFlow(0L)
     val tick: StateFlow<Long> = _tick
 
-    init {
+    private var timerRunning = false
+
+    fun startTimer() {
+        if (timerRunning) return
+        timerRunning = true
         viewModelScope.launch {
-            while (true) {
+            while (timerRunning) {
                 _tick.value = SystemClock.elapsedRealtime()
                 kotlinx.coroutines.delay(1000L)
             }
         }
+    }
+
+    fun stopTimer() {
+        timerRunning = false
     }
 
     private val _apartmentId = MutableStateFlow<Long?>(null)
@@ -51,14 +59,13 @@ class StayViewModel(application: Application) : AndroidViewModel(application) {
                         _tick
                     ) { consumptions, _ ->
                         val now = System.currentTimeMillis()
-                        val apartment = apartmentDao.getById(stay.apartmentId)
                         val consumptionTotal = consumptions.sumOf { it.quantity * it.unitPriceInCents }
                         val duration = BillingEngine.formatDuration(stay.startTime, now)
                         val durationHMS = BillingEngine.formatDurationHMS(stay.startTime, now)
                         val stayAmount = BillingEngine.calculateStayAmount(stay.startTime, now).amountInCents
                         StayDetailState(
                             stay = stay,
-                            apartment = apartment,
+                            apartment = null,
                             consumptions = consumptions,
                             consumptionTotal = consumptionTotal,
                             duration = duration,
@@ -78,15 +85,37 @@ class StayViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = StayDetailState()
         )
 
+    private val _apartment = MutableStateFlow<Apartment?>(null)
+
+    init {
+        viewModelScope.launch {
+            stayDetail.filterNotNull().collect { state ->
+                state.stay?.let { stay ->
+                    val apt = apartmentDao.getById(stay.apartmentId)
+                    _apartment.value = apt
+                }
+            }
+        }
+    }
+
+    val enrichedDetail: StateFlow<StayDetailState> = combine(stayDetail, _apartment) { detail, apartment ->
+        detail.copy(apartment = apartment)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = StayDetailState()
+    )
+
     fun loadByApartment(apartmentId: Long) {
         _apartmentId.value = apartmentId
+        startTimer()
     }
 
     fun checkout(paymentMethod: PaymentMethod) {
         viewModelScope.launch {
             val state = stayDetail.value
             val stay = state.stay ?: return@launch
-            val apartment = state.apartment ?: return@launch
+            val apartment = _apartment.value ?: return@launch
 
             stayDao.endStay(stay.id, System.currentTimeMillis())
             apartmentDao.updateState(stay.apartmentId, ApartmentState.LIMPEZA)
@@ -102,6 +131,7 @@ class StayViewModel(application: Application) : AndroidViewModel(application) {
                     timestamp = System.currentTimeMillis()
                 )
             )
+            stopTimer()
         }
     }
 }

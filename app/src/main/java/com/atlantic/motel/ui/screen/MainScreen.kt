@@ -27,10 +27,10 @@ import com.atlantic.motel.viewmodel.MainViewModel
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     data object Apartamentos : BottomNavItem("apartamentos", Icons.Default.Villa, "Apts")
-    data object Produtos : BottomNavItem("products", Icons.Default.Inventory, "Produtos")
+    data object Produtos : BottomNavItem("products", Icons.Default.Storefront, "Produtos")
     data object Lavanderia : BottomNavItem("laundry", Icons.Default.LocalLaundryService, "Lavanderia")
     data object Reservas : BottomNavItem("reservations", Icons.Default.Event, "Reservas")
-    data object Relatorios : BottomNavItem("reports", Icons.Default.Receipt, "Relatórios")
+    data object Relatorios : BottomNavItem("reports", Icons.Default.ReceiptLong, "Relatórios")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

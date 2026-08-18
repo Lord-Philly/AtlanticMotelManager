@@ -29,25 +29,23 @@ fun ReportsScreen(
 ) {
     val context = LocalContext.current
     val exportState by viewModel.exportState.collectAsState()
+    val exportPdfState by viewModel.exportPdfState.collectAsState()
 
     LaunchedEffect(exportState) {
         exportState?.let { path ->
             if (!path.startsWith("ERRO")) {
-                val file = java.io.File(path)
-                val uri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    file
-                )
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(Intent.createChooser(intent, "Compartilhar Relatório"))
+                shareFile(context, path, "text/plain", "Compartilhar Relatório")
             }
             viewModel.clearExportState()
+        }
+    }
+
+    LaunchedEffect(exportPdfState) {
+        exportPdfState?.let { path ->
+            if (!path.startsWith("ERRO")) {
+                shareFile(context, path, "application/pdf", "Compartilhar Relatório PDF")
+            }
+            viewModel.clearExportPdfState()
         }
     }
 
@@ -102,24 +100,104 @@ fun ReportsScreen(
                 onClick = onHistoryClick
             )
 
-            ReportButton(
-                icon = Icons.Default.CalendarToday,
-                title = "Relatório Diário",
-                subtitle = "Total e pagamentos de hoje",
-                onClick = { viewModel.exportReport(ReportPeriod.DIARIO, context) }
+            ReportSection(
+                title = "Diário",
+                onTxt = { viewModel.exportReport(ReportPeriod.DIARIO, context) },
+                onPdf = { viewModel.exportReportPdf(ReportPeriod.DIARIO, context) }
             )
-            ReportButton(
-                icon = Icons.Default.DateRange,
-                title = "Relatório Semanal",
+            ReportSection(
+                title = "Semanal",
                 subtitle = "Últimos 7 dias",
-                onClick = { viewModel.exportReport(ReportPeriod.SEMANAL, context) }
+                onTxt = { viewModel.exportReport(ReportPeriod.SEMANAL, context) },
+                onPdf = { viewModel.exportReportPdf(ReportPeriod.SEMANAL, context) }
             )
-            ReportButton(
-                icon = Icons.Default.CalendarMonth,
-                title = "Relatório Mensal",
+            ReportSection(
+                title = "Mensal",
                 subtitle = "Últimos 30 dias",
-                onClick = { viewModel.exportReport(ReportPeriod.MENSAL, context) }
+                onTxt = { viewModel.exportReport(ReportPeriod.MENSAL, context) },
+                onPdf = { viewModel.exportReportPdf(ReportPeriod.MENSAL, context) }
             )
+        }
+    }
+}
+
+private fun shareFile(context: android.content.Context, path: String, mimeType: String, title: String) {
+    val file = java.io.File(path)
+    val uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        file
+    )
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = mimeType
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    context.startActivity(Intent.createChooser(intent, title))
+}
+
+@Composable
+fun ReportSection(
+    title: String,
+    subtitle: String = "",
+    onTxt: () -> Unit,
+    onPdf: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SurfaceBlack),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.ReceiptLong,
+                        contentDescription = null,
+                        tint = DeepCrimson,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = TextPrimary)
+                    if (subtitle.isNotBlank()) {
+                        Text(subtitle, fontSize = 12.sp, color = TextSecondary)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onTxt,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepCrimson, contentColor = Color.White),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.TextSnippet, null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("TXT", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                }
+                Button(
+                    onClick = onPdf,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Burgundy, contentColor = Color.White),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.PictureAsPdf, null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("PDF", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                }
+            }
         }
     }
 }
@@ -144,8 +222,7 @@ fun ReportButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(40.dp),
+                modifier = Modifier.size(40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -161,8 +238,7 @@ fun ReportButton(
                 Text(subtitle, fontSize = 12.sp, color = TextSecondary)
             }
             Box(
-                modifier = Modifier
-                    .size(40.dp),
+                modifier = Modifier.size(40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

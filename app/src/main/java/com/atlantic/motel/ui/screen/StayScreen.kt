@@ -33,10 +33,14 @@ fun StayScreen(
     stayViewModel: StayViewModel = viewModel(),
     consumptionViewModel: ConsumptionViewModel = viewModel()
 ) {
-    val stayDetail by stayViewModel.stayDetail.collectAsState()
+    val stayDetail by stayViewModel.enrichedDetail.collectAsState()
 
     LaunchedEffect(apartmentId) {
         stayViewModel.loadByApartment(apartmentId)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { stayViewModel.stopTimer() }
     }
 
     LaunchedEffect(stayDetail.stay?.id) {
